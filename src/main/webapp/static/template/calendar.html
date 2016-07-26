@@ -1,0 +1,33 @@
+<div class="calendar-title">
+    <div class="prev" ng-class="{disabled:prevDisabled}" ng-click="prev($event)">上一月</div><div class="date" ng-bind="title"></div><div class="next" ng-class="{disabled:nextDisabled}" ng-click="next($event)">下一月</div>
+</div>
+
+<div class="calendar-content">
+    <div class="left">
+        <div ng-if="loading" class="calendar_loading">
+            <img src="/static/images/loading_32px.gif"/>
+        </div>
+        <div ng-show="error" class="calendar_retry">
+            <div class="retryContent">
+                加载失败，<span ng-click="retry()" class="click">请点击刷新</span>
+            </div>
+        </div>
+        <div ng-if="!loading && !error">
+            <div class="calendar-content-title">
+                <span class="day">日</span>
+                <span class="day">一</span>
+                <span class="day">二</span>
+                <span class="day">三</span>
+                <span class="day">四</span>
+                <span class="day">五</span>
+                <span class="day last">六</span>
+            </div>
+            <div class="calendar-content-main">
+                <div ng-repeat="row in dayArray track by $index" class="row">
+                    <span ng-repeat="col in row track by $index" ng-class="{last:$last}" ng-bind="col" class="day"></span>
+                    <span ng-repeat="col in row track by $index" class="displayPrice" ng-if="data" ng-bind=" (data | stock:title:col).stock.price ? '￥'+(data | stock:title:col).stock.price : ''"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd"
+	default-lazy-init="true">
+
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+		<property name="realm" ref="shiroDbRealm" />
+		<property name="cacheManager" ref="shiroEhcacheManager" />
+		<property name="rememberMeManager" ref="rememberMeManager"/>
+	</bean>
+
+	<bean id="shiroDbRealm" class="com.demo.shiro.ShiroDbRealm">
+
+	</bean>
+	
+	<!-- Shiro Filter -->
+	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+		<property name="securityManager" ref="securityManager" />
+		<property name="loginUrl" value="/login" />
+		<property name="successUrl" value="/" />
+		<property name="filterChainDefinitions">
+			<value>
+				<!--/login = user-->
+				/logout = logout
+				/findpass = anon
+				/getcode = anon
+				/modify = anon
+				/static/** = anon
+				/config_* = anon
+				/** = user
+			</value>
+		</property>
+	</bean>
+	
+	<bean id="shiroEhcacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+		<property name="cacheManagerConfigFile" value="classpath:ehcache/ehcache-shiro.xml"/>
+	</bean>
+	
+	<bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+
+	<bean id="rememberMeCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+		<constructor-arg value="rememberMe"/>
+		<property name="httpOnly" value="true"/>
+		<property name="maxAge" value="2592000"/>
+	</bean>
+
+	<bean id="rememberMeManager"
+		  class="org.apache.shiro.web.mgt.CookieRememberMeManager">
+		<property name="cipherKey" value="#{T(org.apache.shiro.codec.Base64).decode('4AvVhmFLUs0KTA3Kprsdag==')}"/>
+		<property name="cookie" ref="rememberMeCookie"/>
+	</bean>
+</beans>

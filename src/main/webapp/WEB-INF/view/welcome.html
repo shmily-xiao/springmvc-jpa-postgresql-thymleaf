@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>
+        简途旅行核心管理系统
+    </title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <link rel="stylesheet" th:href="@{/static/css/main_a340c41.css}" />
+</head>
+<body style="display:table">
+<div class="welcome" style="border-top:1px solid #d7d7d7">
+    <div class="welcomeimg">
+        <img th:src="@{/static/images/welcome.png}"/>
+    </div>
+</div>
+</body>
+<script type="text/javascript" th:src="@{/static/lib/jquery-1.11.1.min.js}"></script>
+<script type="text/javascript">
+    $('.header .more').hover(function() {
+        $(this).children('ul').show();
+    }, function() {
+        $(this).children('ul').hide();
+    });
+    $('.logout').click(function(event){
+        $.getJSON($(this).attr('href'),function(data){
+            top.document.location.href = data.url;
+        })
+    })
+</script>
+</html>

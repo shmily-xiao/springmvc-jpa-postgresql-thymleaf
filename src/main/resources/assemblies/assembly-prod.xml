@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+    <id>prod</id>
+    <formats>
+        <format>war</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>${groupId}:${artifactId}</include>
+            </includes>
+            <useProjectArtifact>true</useProjectArtifact>
+            <unpack>true</unpack>
+            <unpackOptions>
+                <excludes>
+                    <exclude>WEB-INF/classes/META-INF/*</exclude>
+                    <exclude>WEB-INF/classes/assemblies/</exclude>
+                    <exclude>WEB-INF/classes/db.properties</exclude>
+                </excludes>
+            </unpackOptions>
+        </dependencySet>
+    </dependencySets>
+    <fileSets>
+        <!-- 文件夹设置 -->
+        <fileSet>
+            <directory>overlays/prod</directory>
+            <includes>
+                <include>**/**</include>
+            </includes>
+            <outputDirectory>/WEB-INF/classes</outputDirectory>
+        </fileSet>
+    </fileSets>
+</assembly>

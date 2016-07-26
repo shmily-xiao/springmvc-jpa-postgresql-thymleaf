@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:task="http://www.springframework.org/schema/task"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd"
+	   default-lazy-init="true">
+
+	<task:scheduler id="taskScheduler" pool-size="10" />
+
+	<task:annotation-driven scheduler="taskScheduler" />
+
+	<!--<task:scheduled-tasks>-->
+		<!--<task:scheduled ref="orderTask" method="refresh" fixed-rate="30000"/>-->
+		<!--&lt;!&ndash;<task:scheduled ref="rallyNoticeTask" method="sendNotice" cron="0 0 17 * * ?"/>&ndash;&gt;-->
+		<!--<task:scheduled ref="cardTask" method="refresh" fixed-rate="5000" />-->
+		<!--<task:scheduled ref="cardOrderTask" method="refresh" fixed-rate="5000" />-->
+		<!--<task:scheduled ref="couponTask" method="checkCoupon" cron="0 0 0 * * *"/>-->
+		<!--<task:scheduled ref="groupBuyOrderTask" method="refresh" fixed-rate="5000" />-->
+		<!--<task:scheduled ref="groupBuyBatchTask" method="refreshStatus" fixed-rate="5000" />-->
+	<!--</task:scheduled-tasks>-->
+
+	<!--<bean id="cardOrderTask" class="com.demo.task.CardOrderTask">-->
+		<!--<property name="cardOrderService" ref="cardOrderService"/>-->
+	<!--</bean>-->
+	<!---->
+</beans>

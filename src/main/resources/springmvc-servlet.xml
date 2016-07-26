@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+            http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context-4.2.xsd
+            http://www.springframework.org/schema/aop  http://www.springframework.org/schema/aop/spring-aop-4.2.xsd
+            http://www.springframework.org/schema/mvc  http://www.springframework.org/schema/mvc/spring-mvc-4.2.xsd">
+
+    <!--配置扫描的controller-->
+    <context:component-scan base-package="com.demo.controller">
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+        <context:include-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+    </context:component-scan>
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+
+    <mvc:resources mapping="/static/**" location="/static/"/>
+
+    <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:validationMessage.properties</value>
+                <value>classpath:hostUrl.properties</value>
+                <value>classpath:config.properties</value>
+            </list>
+        </property>
+        <property name="fileEncoding" value="utf-8"/>
+    </bean>
+
+    <!--配置spring注解驱动-->
+    <mvc:annotation-driven validator="beansValidator" enable-matrix-variables="true">
+        <!-- 消息转换器 -->
+        <mvc:message-converters register-defaults="true">
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                <property name="supportedMediaTypes" value="text/html;charset=UTF-8"/>
+            </bean>
+            <bean class="com.demo.controller.support.XssCleanJsonHttpMsgConverter">
+                <property name="supportedMediaTypes" value="application/json;charset=UTF-8"/>
+                <property name="features">
+                    <list>
+                        <value>WriteDateUseDateFormat</value>
+                        <value>SkipTransientField</value>
+                        <value>DisableCircularReferenceDetect</value>
+                    </list>
+                </property>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+    <bean id="xlsViewResolver" class="org.springframework.web.servlet.view.XmlViewResolver">
+        <property name="order" value="1"/>
+    </bean>
+
+    <!--配置Thymeleaf模板引擎和视图解析器-->
+    <bean id="templateResolver" class="org.thymeleaf.templateresolver.ServletContextTemplateResolver">
+        <property name="prefix" value="/WEB-INF/view/"/>
+        <property name="suffix" value=".html"/>
+        <property name="cacheable" value="false"/>
+        <property name="order" value="0"/>
+        <property name="templateMode" value="HTML5"/>
+        <property name="characterEncoding" value="UTF-8"/>
+    </bean>
+    <bean id="templateEngine" class="org.thymeleaf.spring4.SpringTemplateEngine">
+        <property name="templateResolver" ref="templateResolver"/>
+        <property name="additionalDialects">
+            <set>
+                <bean class="at.pollux.thymeleaf.shiro.dialect.ShiroDialect"/>
+            </set>
+        </property>
+    </bean>
+    <bean class="com.demo.util.framework.init.ThymeleafInitializer">
+        <property name="contentType" value="text/html;charset=UTF-8"/>
+        <property name="templateEngine" ref="templateEngine" />
+        <property name="characterEncoding" value="UTF-8"/>
+    </bean>
+
+    <!-- 文件上传，配置MultipartResolver处理器 -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="defaultEncoding" value="UTF-8"/>
+    </bean>
+    <!-- 定义无需Controller的url<->view直接映射 -->
+    <mvc:view-controller path="/" view-name="redirect:/home"/>
+
+    <!-- 添加 Shiro Spring AOP 权限注解的支持 -->
+    <aop:config proxy-target-class="true">
+        <aop:aspect id="logAspect" ref="controllerLog">
+            <aop:pointcut id="log" expression="within(@org.springframework.stereotype.Controller *)"/>
+            <aop:before method="doBefore"  pointcut-ref="log"/>
+            <aop:around method="doAround"  pointcut-ref="log"/>
+        </aop:aspect>
+        <aop:aspect id="mutitenantAspect" ref="mutitenant">
+            <aop:pointcut id="tenant" expression="within(@org.springframework.stereotype.Controller *)"/>
+            <aop:before method="doBefore"  pointcut-ref="tenant"/>
+        </aop:aspect>
+    </aop:config>
+    <bean name="controllerLog" class="com.demo.aop.ControllerLogAspect"/>
+    <bean name="mutitenant" class="com.demo.aop.MutitenantAspect"/>
+    <bean class=" org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
+
+    <bean id="beansValidator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+        <property name="providerClass" value="org.hibernate.validator.HibernateValidator"/>
+        <property name="validationMessageSource" ref="messageSource"/>
+    </bean>
+
+    <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+        <property name="basenames" value="classpath:validationMessage"/>
+        <property name="defaultEncoding" value="UTF-8"/>
+    </bean>
+
+    <bean id="conversionService"
+          class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+    </bean>
+
+    <bean id="webBindingInitializer" class="org.springframework.web.bind.support.ConfigurableWebBindingInitializer">
+        <property name="validator" ref="beansValidator"/>
+        <property name="conversionService" ref="conversionService"/>
+    </bean>
+
+    <!--&lt;!&ndash; ResponseBody返回中文乱码处理 &ndash;&gt;-->
+    <!--<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">-->
+        <!--<property name="webBindingInitializer" ref="webBindingInitializer"/>-->
+        <!--<property name="messageConverters">-->
+            <!--<list>-->
+                <!--<bean class="org.springframework.http.converter.ByteArrayHttpMessageConverter"/>-->
+                <!--<bean class="org.springframework.http.converter.StringHttpMessageConverter">-->
+                    <!--<property name="supportedMediaTypes">-->
+                        <!--<list>-->
+                            <!--<value>text/html;charset=UTF-8</value>-->
+                            <!--<value>application/json</value>-->
+                        <!--</list>-->
+                    <!--</property>-->
+                <!--</bean>-->
+                <!--<bean class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter">-->
+                    <!--<property name="supportedMediaTypes">-->
+                        <!--<list>-->
+                            <!--<value>application/json;charset=UTF-8</value>-->
+                        <!--</list>-->
+                    <!--</property>-->
+                    <!--<property name="features">-->
+                        <!--<array>-->
+                            <!--<value type="com.alibaba.fastjson.serializer.SerializerFeature">-->
+                                <!--DisableCircularReferenceDetect-->
+                            <!--</value>-->
+                            <!--<value type="com.alibaba.fastjson.serializer.SerializerFeature">UseISO8601DateFormat</value>-->
+                        <!--</array>-->
+                    <!--</property>-->
+                <!--</bean>-->
+                <!--<bean class="org.springframework.http.converter.ResourceHttpMessageConverter"/>-->
+            <!--</list>-->
+        <!--</property>-->
+    <!--</bean>-->
+
+    <!-- 静态资源-->
+    <mvc:resources mapping="/static/lib/**" location="/static/lib/" cache-period="1"/>
+    <mvc:resources mapping="/static/css/**" location="/static/css/" cache-period="1"/>
+    <mvc:resources mapping="/static/js/**" location="/static/js/" cache-period="1"/>
+    <mvc:resources mapping="/static/images/**" location="/static/images/" cache-period="1"/>
+    <mvc:resources mapping="/robots.txt" location="/robots.txt" order="0"/>
+</beans>
